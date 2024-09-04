@@ -1,0 +1,54 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Log in to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+      with:
+        region: eu-north-1
+
+    - name: Build and push Docker image
+      run: |
+        docker build -t my-web-app .
+        docker tag my-web-app ${{ steps.login-ecr.outputs.registry }}/my-web-app
+        docker push ${{ steps.login-ecr.outputs.registry }}/my-web-app
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Deploy to ECS
+      id: deploy-ecs
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: my-web-task
+        service: my-web-service
+        cluster: my-web-cluster
+        wait-for-service-stability: true
+
+  test:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+    - name: Integration Tests
+      run: |
+        curl -f http://13.50.248:80 # Replace with your actual application URL
+
+  rollback:
+    runs-on: ubuntu-latest
+    if: failure()
+    steps:
+    - name: Rollback on failure
+      run: |
+        aws ecs update-service --cluster my-web-cluster  --service my-web-service --force-new-deployment
