@@ -1,10 +1,3 @@
-name: CI/CD Pipeline
-
-on:
-  push:
-    branches:
-      - main
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,17 +5,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
     - name: Log in to Amazon ECR
       id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-      with:
-        region: eu-north-1
+      run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY_URI }}
 
     - name: Build and push Docker image
       run: |
         docker build -t my-web-app .
-        docker tag my-web-app ${{ steps.login-ecr.outputs.registry }}/my-web-app
-        docker push ${{ steps.login-ecr.outputs.registry }}/my-web-app
+        docker tag my-web-app ${{ secrets.ECR_REPOSITORY_URI }}:latest
+        docker push ${{ secrets.ECR_REPOSITORY_URI }}:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -43,12 +41,4 @@ jobs:
     steps:
     - name: Integration Tests
       run: |
-        curl -f http://13.50.248:80 # Replace with your actual application URL
-
-  rollback:
-    runs-on: ubuntu-latest
-    if: failure()
-    steps:
-    - name: Rollback on failure
-      run: |
-        aws ecs update-service --cluster my-web-cluster  --service my-web-service --force-new-deployment
+        curl -f http://<PUBLIC_DNS_OR_IP>:80  # Replace with your actual application URL
