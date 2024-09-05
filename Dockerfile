@@ -1,14 +1,20 @@
-# Stage 1: Build the application
-FROM node:14 AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY ./src ./src
-RUN npm run build || true  # Continue even if the build fails for debugging
-RUN ls -al /app/build  # List the contents of the build directory
+# Stage 1: Build stage (just copying files)
+FROM alpine:3.12 AS builder
 
-# Stage 2: Serve the application with Nginx
+# Set working directory in the container
+WORKDIR /app
+
+# Copy your web application's source files to the container
+COPY ./src ./src
+
+# Stage 2: Nginx server to serve the static files
 FROM nginx:alpine
-COPY --from=builder /app/build /usr/share/nginx/html  # Copy built files
+
+# Copy static files from the builder stage to the Nginx folder
+COPY --from=builder /app/src /usr/share/nginx/html
+
+# Expose port 80 for HTTP access
 EXPOSE 80
+
+# Start Nginx in the foreground
 CMD ["nginx", "-g", "daemon off;"]
