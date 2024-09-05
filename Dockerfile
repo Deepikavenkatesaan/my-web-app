@@ -1,13 +1,25 @@
 # Stage 1: Build the application
 FROM node:14 AS builder
 WORKDIR /app
+
+# Copy dependency definitions
 COPY package*.json ./
 RUN npm install
+
+# Copy source code
 COPY ./src ./src 
-RUN npm run build  # Adjust this if you're using a different build command
+
+# Build the application
+RUN npm run build  # Ensure this command is correct and outputs to /app/build
 
 # Stage 2: Serve the application with Nginx
 FROM nginx:alpine
-COPY --from=builder /app/build /usr/share/nginx/html  # Copy built files
+
+# Copy built files from the builder stage
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Expose port 80
 EXPOSE 80
+
+# Command to run Nginx
 CMD ["nginx", "-g", "daemon off;"]
