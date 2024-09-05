@@ -1,9 +1,9 @@
 {
-    "taskDefinitionArn": "arn:aws:ecs:eu-north-1:992382769777:task-definition/my-web-task:4",
+    "taskDefinitionArn": "arn:aws:ecs:eu-north-1:992382769777:task-definition/my-web-app:1",
     "containerDefinitions": [
         {
             "name": "my-web-container",
-            "image": "992382769777.dkr.ecr.eu-north-1.amazonaws.com/my_web_app",
+            "image": "992382769777.dkr.ecr.eu-north-1.amazonaws.com/my-web-app",
             "cpu": 1024,
             "memory": 512,
             "memoryReservation": 512,
@@ -25,7 +25,7 @@
             "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
-                    "awslogs-group": "/ecs/my-web-task",
+                    "awslogs-group": "/ecs/my-web-app",
                     "mode": "non-blocking",
                     "awslogs-create-group": "true",
                     "max-buffer-size": "25m",
@@ -37,11 +37,11 @@
             "systemControls": []
         }
     ],
-    "family": "my-web-task",
+    "family": "my-web-app",
     "taskRoleArn": "arn:aws:iam::992382769777:role/ecsTaskExecutionRole",
     "executionRoleArn": "arn:aws:iam::992382769777:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
-    "revision": 4,
+    "revision": 1,
     "volumes": [],
     "status": "ACTIVE",
     "requiresAttributes": [
@@ -93,7 +93,7 @@
         "cpuArchitecture": "X86_64",
         "operatingSystemFamily": "LINUX"
     },
-    "registeredAt": "2024-09-04T14:55:53.754Z",
+    "registeredAt": "2024-09-05T14:38:45.813Z",
     "registeredBy": "arn:aws:iam::992382769777:root",
     "tags": []
 }
