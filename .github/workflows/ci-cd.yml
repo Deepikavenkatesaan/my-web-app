@@ -1,4 +1,4 @@
-name: Deploy to Amazon ECS
+name: Deploy to AWS ECS
 
 on:
   push:
@@ -6,58 +6,48 @@ on:
       - main  # Trigger the workflow on push to the main branch
 
 env:
-  AWS_REGION: eu-north-1
+  AWS_REGION: ${{ secrets.AWS_REGION }}
   ECR_REPOSITORY: my-web-app
   ECS_SERVICE: my-web-service
   ECS_CLUSTER: my-web-cluster
-  ECS_TASK_DEFINITION: .github/workflows/task-definition.json
+  ECS_TASK_DEFINITION: ecs-task-definition.json
   CONTAINER_NAME: my-web-container
-
-permissions:
-  id-token: write
-  contents: read
 
 jobs:
   build-and-deploy:
-    name: Build and Deploy
     runs-on: ubuntu-latest
-    environment: production
-
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-
+      
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
-
+      
     - name: Cache Docker layers
       uses: docker/cache-action@v2
       with:
         path: /tmp/.buildx-cache
-
+      
     - name: Build Docker image
       run: |
-        docker build -t my-app:latest .
+        docker build -t ${{ secrets.ECR_REGISTRY }}/$ECR_REPOSITORY:latest .
 
     - name: Log in to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v1
-
-    - name: Tag Docker image
-      run: |
-        docker tag my-app:latest ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
-
+      
     - name: Push Docker image to Amazon ECR
       run: |
-        docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
-
+        docker push ${{ secrets.ECR_REGISTRY }}/$ECR_REPOSITORY:latest
+      
     - name: Fill in the new image ID in the Amazon ECS task definition
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: ${{ env.ECS_TASK_DEFINITION }}
         container-name: ${{ env.CONTAINER_NAME }}
-        image: ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
+        image: ${{ secrets.ECR_REGISTRY }}/$ECR_REPOSITORY:latest
 
-    - name: Deploy Amazon ECS task definition
+    - name: Deploy to Amazon ECS
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
