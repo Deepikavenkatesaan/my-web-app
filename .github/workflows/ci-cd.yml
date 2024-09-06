@@ -12,7 +12,7 @@ env:
   ECS_CLUSTER: my-web-cluster
   ECS_TASK_DEFINITION: .github/workflows/task-definition.json
   CONTAINER_NAME: my-web-container
-  PUBLIC_IP: 16.16.122.94
+  ALB_DNS_NAME: my-app-alb-231823177.eu-north-1.elb.amazonaws.com
 
 permissions:
   id-token: write
@@ -67,7 +67,7 @@ jobs:
 
     - name: Run Integration Tests
       run: |
-        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://16.16.122.94)   
+        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://$ALB_DNS_NAME)
         if [ "$RESPONSE" -ne 200 ]; then
           echo "Integration tests failed with status code $RESPONSE"
           echo "Triggering rollback..."
