@@ -1,10 +1,9 @@
-
 name: Deploy to Amazon ECS
 
 on:
   push:
     branches:
-      - "main" 
+      - "main"
 
 env:
   AWS_REGION: eu-north-1
@@ -13,6 +12,7 @@ env:
   ECS_CLUSTER: my-web-cluster
   ECS_TASK_DEFINITION: .github/workflows/task-definition.json
   CONTAINER_NAME: my-web-container
+  PUBLIC_IP: 16.16.122.94
 
 permissions:
   id-token: write
@@ -64,3 +64,18 @@ jobs:
         service: ${{ env.ECS_SERVICE }}
         cluster: ${{ env.ECS_CLUSTER }}
         wait-for-service-stability: true
+
+    - name: Run Integration Tests
+      run: |
+        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://16.16.122.94/health)
+        if [ "$RESPONSE" -ne 200 ]; then
+          echo "Integration tests failed with status code $RESPONSE"
+          echo "Triggering rollback..."
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --force-new-deployment
+          exit 1
+        else
+          echo "Integration tests passed with status code $RESPONSE"
+        fi
