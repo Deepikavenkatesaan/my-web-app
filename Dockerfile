@@ -1,16 +1,16 @@
-# Stage 1: Build stage (just copying files)
+# Stage 1: Build stage
 FROM alpine:3.12 AS builder
 
 # Set working directory in the container
 WORKDIR /app
 
-# Copy your web application's source files to the container
+# Copying your web application's source files to the container
 COPY ./src ./src
 
 # Stage 2: Nginx server to serve the static files
 FROM nginx:alpine
 
-# Copy static files from the builder stage to the Nginx folder
+# Copying static files from the builder stage to the Nginx folder
 COPY --from=builder /app/src /usr/share/nginx/html
 
 # Expose port 80 for HTTP access
