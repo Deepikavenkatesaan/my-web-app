@@ -67,7 +67,7 @@ jobs:
 
     - name: Run Integration Tests
       run: |
-        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://16.16.122.94/health)
+        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://16.16.122.94   
         if [ "$RESPONSE" -ne 200 ]; then
           echo "Integration tests failed with status code $RESPONSE"
           echo "Triggering rollback..."
